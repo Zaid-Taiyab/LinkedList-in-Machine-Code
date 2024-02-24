@@ -1,0 +1,74 @@
+
+# $s0=head, $s2=n, $s1=newnode
+Main:
+addi $a0, $s0, 0
+addi $a1, $s2, 0
+addi $a2, $s1, 0
+jal addNode
+lw $t1, 4($v0)
+lw $s3, 0($t1)
+j Exit
+
+addNode:
+# Save registers on the stack
+addi $sp, $sp, -16
+sw $ra, 12($sp)
+sw $a2, 8($sp)
+sw $a1, 4($sp)
+sw $a0, 0($sp)
+# Check if n is 0 
+beq $a1, $zero, AddAtBeginning
+# findNode function
+addi $a0, $a0, 0
+addi $a1, $a1, 0
+jal findNode
+
+# Get addresses from return values
+addi $t1, $v0, 0  # addr1
+addi $t2, $v1, 0  # addr2
+# addr1 = $t1, addr2 = $t2
+lw $t3, 8($sp)  # newNode
+sw $t3, 4($t1)  # addr1->next = newNode
+sw $v1, 4($t3)  # newNode->next = addr2
+# Restore registers and return with function EndAddNode
+j EndAddNode
+
+AddAtBeginning:
+lw $t3, 8($sp)  # newNode
+lw $t4, 0($sp)  # head
+sw $t4, 4($t3)  # newNode->next = head
+sw $t3, 0($sp)  # head = newNode
+sw $v0, 4($t3)
+jr $ra
+
+EndAddNode:
+# Restore registers from the stack
+lw $ra, 12($sp)
+lw $a2, 8($sp)
+lw $a1, 4($sp)
+lw $a0, 0($sp)
+addi $sp, $sp, 16
+# Return to the calling function
+jr $ra
+
+findNode:
+# $a0 = head, $a1 = n
+# $v0 = [addr1]
+# $v1 = [addr2]
+# Register usage:
+# $t0 = curr, $t1 = addr1, $t2 = addr2
+addi $t0, $a0, 0 
+addi $t3, $zero, 1
+StartLoop:
+bge $t3, $a1, Break
+lw $t5, 4($t0)
+beq $t5, $zero, Break
+addi $t3, $t3, 1
+j StartLoop
+Break:
+addi $v0, $t5, 0 #curr for addr1
+addi $s5, $t5, 4 #getting memory of curr->next for addr2
+lw $v1, 0($s5)   #addr2 in $v1
+jr $ra
+
+Exit:
